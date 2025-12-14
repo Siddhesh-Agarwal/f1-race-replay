@@ -11,9 +11,32 @@ from datetime import timedelta
 
 from src.lib.tyres import get_tyre_compound_int
 from src.lib.time import parse_time_string, format_time
-from src.types import SessionType, QualiTelemetry, QualiTelemetryResult
-from typing import Optional, Dict, List, Tuple
+from src.types import (
+    DriverColor,
+    RaceTelemetry,
+    RaceTelemetryTrackStatus,
+    SessionType,
+    QualiTelemetry,
+    QualiTelemetryResult,
+    WeatherSnapshot,
+)
+from typing import Optional, Dict, List, Any
 import pandas as pd
+
+
+def _get_weather_snapshot(
+    wt: Dict[str, List[float]], rain_val: float, i: int
+) -> WeatherSnapshot:
+    return WeatherSnapshot(
+        track_temp=float(wt["track_temp"][i]) if wt.get("track_temp") else None,
+        air_temp=float(wt["air_temp"][i]) if wt.get("air_temp") else None,
+        humidity=float(wt["humidity"][i]) if wt.get("humidity") else None,
+        wind_speed=float(wt["wind_speed"][i]) if wt.get("wind_speed") else None,
+        wind_direction=float(wt["wind_direction"][i])
+        if wt.get("wind_direction")
+        else None,
+        rain_state="RAINING" if rain_val >= 0.5 else "DRY",
+    )
 
 
 def enable_cache() -> None:
@@ -177,7 +200,7 @@ def load_session(year: int, round_number: int, session_type: SessionType) -> Ses
 # The following functions require a loaded session object
 
 
-def get_driver_colors(session: Session) -> Dict[str, Tuple[int, int, int]]:
+def get_driver_colors(session: Session) -> Dict[str, DriverColor]:
     color_mapping = fastf1.plotting.get_driver_color_mapping(session)
 
     # Convert hex colors to RGB tuples
@@ -196,7 +219,7 @@ def get_circuit_rotation(session: Session):
     return circuit.rotation
 
 
-def get_race_telemetry(session: Session, session_type: SessionType):
+def get_race_telemetry(session: Session, session_type: SessionType) -> RaceTelemetry:
     event_name = str(session).replace(" ", "_")
     cache_suffix = "sprint" if session_type == SessionType.SPRINT else "race"
 
@@ -312,7 +335,7 @@ def get_race_telemetry(session: Session, session_type: SessionType):
 
     track_status = session.track_status
 
-    formatted_track_statuses = []
+    formatted_track_statuses: List[RaceTelemetryTrackStatus] = []
 
     for status in track_status.to_dict("records"):
         seconds = timedelta.total_seconds(status["Time"])
@@ -326,15 +349,15 @@ def get_race_telemetry(session: Session, session_type: SessionType):
             formatted_track_statuses[-1]["end_time"] = start_time
 
         formatted_track_statuses.append(
-            {
-                "status": status["Status"],
-                "start_time": start_time,
-                "end_time": end_time,
-            }
+            RaceTelemetryTrackStatus(
+                status=status["Status"],
+                start_time=start_time,
+                end_time=end_time,
+            )
         )
 
     # 4.1. Resample weather data onto the same timeline for playback
-    weather_resampled = None
+    weather_resampled: Optional[Dict[str, Any]] = None
     weather_df = getattr(session, "weather_data", None)
     if weather_df is not None and not weather_df.empty:
         try:
@@ -345,14 +368,14 @@ def get_race_telemetry(session: Session, session_type: SessionType):
                 order = np.argsort(weather_times)
                 weather_times = weather_times[order]
 
-                def _maybe_get(name):
+                def _maybe_get(name: str):
                     return (
                         weather_df[name].to_numpy()[order]
                         if name in weather_df
                         else None
                     )
 
-                def _resample(series):
+                def _resample(series: np.ndarray):
                     if series is None:
                         return None
                     return np.interp(timeline, weather_times, series)
@@ -442,29 +465,12 @@ def get_race_telemetry(session: Session, session_type: SessionType):
                 "drs": car["drs"],
             }
 
-        weather_snapshot = {}
+        weather_snapshot: Optional[WeatherSnapshot] = None
         if weather_resampled:
             try:
                 wt = weather_resampled
                 rain_val = wt["rainfall"][i] if wt.get("rainfall") is not None else 0.0
-                weather_snapshot = {
-                    "track_temp": float(wt["track_temp"][i])
-                    if wt.get("track_temp") is not None
-                    else None,
-                    "air_temp": float(wt["air_temp"][i])
-                    if wt.get("air_temp") is not None
-                    else None,
-                    "humidity": float(wt["humidity"][i])
-                    if wt.get("humidity") is not None
-                    else None,
-                    "wind_speed": float(wt["wind_speed"][i])
-                    if wt.get("wind_speed") is not None
-                    else None,
-                    "wind_direction": float(wt["wind_direction"][i])
-                    if wt.get("wind_direction") is not None
-                    else None,
-                    "rain_state": "RAINING" if rain_val and rain_val >= 0.5 else "DRY",
-                }
+                weather_snapshot = _get_weather_snapshot(wt=wt, rain_val=rain_val, i=i)
             except Exception as e:
                 print(f"Failed to attach weather data to frame {i}: {e}")
 
@@ -678,7 +684,7 @@ def get_driver_quali_telemetry(session: Session, driver_code: str, quali_segment
         )
 
     # 4.1. Resample weather data onto the same timeline for playback
-    weather_resampled = None
+    weather_resampled: Optional[Dict[str, Any]] = None
     weather_df = getattr(session, "weather_data", None)
     if weather_df is not None and not weather_df.empty:
         try:
@@ -689,14 +695,14 @@ def get_driver_quali_telemetry(session: Session, driver_code: str, quali_segment
                 order_w = np.argsort(weather_times)
                 weather_times = weather_times[order_w]
 
-                def _maybe_get(name):
+                def _maybe_get(name: str):
                     return (
                         weather_df[name].to_numpy()[order_w]
                         if name in weather_df
                         else None
                     )
 
-                def _resample(series):
+                def _resample(series: np.ndarray):
                     if series is None:
                         return None
                     return np.interp(timeline, weather_times, series)
@@ -736,24 +742,7 @@ def get_driver_quali_telemetry(session: Session, driver_code: str, quali_segment
             try:
                 wt = weather_resampled
                 rain_val = wt["rainfall"][i] if wt.get("rainfall") is not None else 0.0
-                weather_snapshot = {
-                    "track_temp": float(wt["track_temp"][i])
-                    if wt.get("track_temp") is not None
-                    else None,
-                    "air_temp": float(wt["air_temp"][i])
-                    if wt.get("air_temp") is not None
-                    else None,
-                    "humidity": float(wt["humidity"][i])
-                    if wt.get("humidity") is not None
-                    else None,
-                    "wind_speed": float(wt["wind_speed"][i])
-                    if wt.get("wind_speed") is not None
-                    else None,
-                    "wind_direction": float(wt["wind_direction"][i])
-                    if wt.get("wind_direction") is not None
-                    else None,
-                    "rain_state": "RAINING" if rain_val and rain_val >= 0.5 else "DRY",
-                }
+                weather_snapshot = _get_weather_snapshot(wt=wt, i=i, rain_val=rain_val)
             except Exception as e:
                 print(f"Failed to attach weather data to frame {i}: {e}")
 

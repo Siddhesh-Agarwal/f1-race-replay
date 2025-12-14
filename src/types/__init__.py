@@ -1,1 +1,10 @@
-from src.types.main import TyreType, SessionType, QualiTelemetry, QualiTelemetryResult
+from src.types.main import (
+    DriverColor,
+    RaceTelemetry,
+    RaceTelemetryTrackStatus,
+    TyreType,
+    SessionType,
+    QualiTelemetry,
+    QualiTelemetryResult,
+    WeatherSnapshot,
+)

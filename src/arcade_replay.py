@@ -13,7 +13,7 @@ def run_arcade_replay(
     frames,
     track_statuses,
     example_lap,
-    drivers,
+    drivers: list[str],
     title: str,
     playback_speed: float = 1.0,
     driver_colors=None,

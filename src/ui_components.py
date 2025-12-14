@@ -1,3 +1,4 @@
+from fastf1.core import Telemetry
 import arcade
 from typing import List, Tuple, Optional
 from typing import Sequence, Optional, Tuple
@@ -33,13 +34,15 @@ def _format_wind_direction(degrees: Optional[float]) -> str:
 
 
 class BaseComponent:
-    def on_resize(self, window):
+    def on_resize(self, window: arcade.Window):
         pass
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         pass
 
-    def on_mouse_press(self, window, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(
+        self, window: arcade.Window, x: float, y: float, button: int, modifiers: int
+    ):
         return False
 
 
@@ -55,7 +58,7 @@ class LegendComponent(BaseComponent):
             "[R]       Restart",
         ]
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         for i, line in enumerate(self.lines):
             arcade.Text(
                 line,
@@ -68,7 +71,9 @@ class LegendComponent(BaseComponent):
 
 
 class WeatherComponent(BaseComponent):
-    def __init__(self, left=20, width=280, height=130, top_offset=170):
+    def __init__(
+        self, left: int = 20, width: int = 280, height: int = 130, top_offset: int = 170
+    ):
         self.left = left
         self.width = width
         self.height = height
@@ -78,7 +83,7 @@ class WeatherComponent(BaseComponent):
     def set_info(self, info: Optional[dict]):
         self.info = info
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         panel_top = window.height - self.top_offset
         if not self.info and not getattr(window, "has_weather", False):
             return
@@ -92,7 +97,7 @@ class WeatherComponent(BaseComponent):
             anchor_y="top",
         ).draw()
 
-        def _fmt(val, suffix="", precision=1):
+        def _fmt(val, suffix: str = "", precision: int = 1):
             return f"{val:.{precision}f}{suffix}" if val is not None else "N/A"
 
         info = self.info or {}
@@ -139,7 +144,7 @@ class LeaderboardComponent(BaseComponent):
         # entries sorted as expected
         self.entries = entries
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         leaderboard_y = window.height - 40
         arcade.Text(
             "Leaderboard",
@@ -194,7 +199,9 @@ class LeaderboardComponent(BaseComponent):
                     rect=rect, texture=tyre_texture, angle=0, alpha=255
                 )
 
-    def on_mouse_press(self, window, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(
+        self, window: arcade.Window, x: float, y: float, button: int, modifiers: int
+    ):
         for code, left, bottom, right, top in self.rects:
             if left <= x <= right and bottom <= y <= top:
                 if self.selected == code:
@@ -220,7 +227,7 @@ class LapTimeLeaderboardComponent(BaseComponent):
         """Accept a list of dicts with keys: pos, code, color, time"""
         self.entries = entries or []
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         leaderboard_y = window.height - 40
         arcade.Text(
             "Lap Times",
@@ -284,7 +291,9 @@ class LapTimeLeaderboardComponent(BaseComponent):
                 anchor_y="top",
             ).draw()
 
-    def on_mouse_press(self, window, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(
+        self, window: arcade.Window, x: float, y: float, button: int, modifiers: int
+    ):
         for code, left, bottom, right, top in self.rects:
             if left <= x <= right and bottom <= y <= top:
                 if self.selected == code:
@@ -298,13 +307,13 @@ class LapTimeLeaderboardComponent(BaseComponent):
 
 
 class QualifyingSegmentSelectorComponent(BaseComponent):
-    def __init__(self, width=400, height=300):
+    def __init__(self, width: int = 400, height: int = 300):
         self.width = width
         self.height = height
         self.driver_result = None
         self.selected_segment = None
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         if not getattr(window, "selected_driver", None):
             return
 
@@ -413,7 +422,9 @@ class QualifyingSegmentSelectorComponent(BaseComponent):
             anchor_y="center",
         ).draw()
 
-    def on_mouse_press(self, window, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(
+        self, window: arcade.Window, x: float, y: float, button: int, modifiers: int
+    ):
         if not getattr(window, "selected_driver", None):
             return False
 
@@ -491,12 +502,12 @@ class QualifyingSegmentSelectorComponent(BaseComponent):
 
 
 class DriverInfoComponent(BaseComponent):
-    def __init__(self, left=20, width=300, min_top=220):
+    def __init__(self, left: int = 20, width: int = 300, min_top: int = 220):
         self.left = left
         self.width = width
         self.min_top = min_top
 
-    def draw(self, window):
+    def draw(self, window: arcade.Window):
         if not getattr(window, "selected_driver", None):
             return
         code = window.selected_driver
@@ -564,14 +575,14 @@ class DriverInfoComponent(BaseComponent):
                 anchor_y="center",
             ).draw()
 
-    def _get_driver_color(self, window, code):
+    def _get_driver_color(self, window: arcade.Window, code: str):
         return window.driver_colors.get(code, arcade.color.GRAY)
 
 
 # Build track geometry from example lap telemetry
 
 
-def build_track_from_example_lap(example_lap, track_width=200):
+def build_track_from_example_lap(example_lap: Telemetry, track_width: int = 200):
     plot_x_ref = example_lap["X"]
     plot_y_ref = example_lap["Y"]
 

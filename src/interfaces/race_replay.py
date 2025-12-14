@@ -24,7 +24,7 @@ class F1RaceReplayWindow(arcade.Window):
         frames,
         track_statuses,
         example_lap,
-        drivers,
+        drivers: list[str],
         title: str,
         playback_speed: float = 1.0,
         driver_colors: Optional[Dict[str, Tuple[int, int, int]]] = None,
