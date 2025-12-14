@@ -29,7 +29,8 @@ def _format_wind_direction(degrees: Optional[float]) -> str:
         "NW",
         "NNW",
     ]
-    idx = int((deg_norm / 22.5) + 0.5) % len(dirs)
+    step = 360 / len(dirs)
+    idx = round(deg_norm / step) % len(dirs)
     return dirs[idx]
 
 
@@ -105,7 +106,7 @@ class WeatherComponent(BaseComponent):
             f"🌡️ Track: {_fmt(info.get('track_temp'), '°C')}",
             f"🌡️ Air: {_fmt(info.get('air_temp'), '°C')}",
             f"💧 Humidity: {_fmt(info.get('humidity'), '%', precision=0)}",
-            f" 🌬️ Wind: {_fmt(info.get('wind_speed'), ' km/h')} {_format_wind_direction(info.get('wind_direction'))}",
+            f"🌬️ Wind: {_fmt(info.get('wind_speed'), ' km/h')} {_format_wind_direction(info.get('wind_direction'))}",
             f"🌧️ Rain: {info.get('rain_state', 'N/A')}",
         ]
         start_y = panel_top - 36

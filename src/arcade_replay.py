@@ -2,6 +2,7 @@ from typing import Optional
 import os
 import arcade
 from src.interfaces.race_replay import F1RaceReplayWindow
+from src.types import DriverColor
 
 # Kept these as "default" starting sizes, but they are no longer hard limits
 SCREEN_WIDTH = 1920
@@ -16,7 +17,7 @@ def run_arcade_replay(
     drivers: list[str],
     title: str,
     playback_speed: float = 1.0,
-    driver_colors=None,
+    driver_colors: Optional[dict[str, DriverColor]] = None,
     circuit_rotation: float = 0.0,
     total_laps: Optional[int] = None,
     chart: bool = False,

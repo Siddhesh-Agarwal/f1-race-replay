@@ -1,3 +1,4 @@
+from typing import Tuple, List
 from fastf1.core import Session
 import arcade
 import threading
@@ -161,7 +162,7 @@ class QualifyingReplay(arcade.Window):
         world_cx = (self.x_min + self.x_max) / 2
         world_cy = (self.y_min + self.y_max) / 2
 
-        def _rotate_about_center(x, y):
+        def _rotate_about_center(x: float, y: float) -> Tuple[float, float]:
             # Translate to centre, rotate, translate back
             tx = x - world_cx
             ty = y - world_cy
@@ -214,7 +215,7 @@ class QualifyingReplay(arcade.Window):
             self.world_to_screen(x, y) for x, y in self.world_outer_points
         ]
 
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.clear()
 
         # Add disclaimer about experimental charting feature
@@ -642,14 +643,14 @@ class QualifyingReplay(arcade.Window):
         self.leaderboard.draw(self)
         self.qualifying_segment_selector_modal.draw(self)
 
-    def _interpolate_points(self, xs, ys, interp_points: int = 2000):
+    def _interpolate_points(self, xs: List[float], ys: List[float], interp_points: int = 2000):
         t_old = np.linspace(0, 1, len(xs))
         t_new = np.linspace(0, 1, interp_points)
         xs_i = np.interp(t_new, t_old, xs)
         ys_i = np.interp(t_new, t_old, ys)
         return list(zip(xs_i, ys_i))
 
-    def world_to_screen(self, x, y):
+    def world_to_screen(self, x: float, y: float) -> Tuple[float, float]:
         # Rotate around the track centre (if rotation is set), then scale+translate
         world_cx = (self.x_min + self.x_max) / 2
         world_cy = (self.y_min + self.y_max) / 2
@@ -665,7 +666,7 @@ class QualifyingReplay(arcade.Window):
         sy = self.world_scale * y + self.ty
         return sx, sy
 
-    def _pick_telemetry_value(self, tel: dict, *keys):
+    def _pick_telemetry_value(self, tel: dict, *keys) :
         """Return the first value for keys that exists in tel and is not None.
         Preserves falsy-but-valid values like 0.0."""
         if not isinstance(tel, dict):
@@ -675,7 +676,7 @@ class QualifyingReplay(arcade.Window):
                 return tel[k]
         return None
 
-    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         # If the segment-selector modal is visible (a driver selected), give it first chance
         # to handle the click (so its close button can work). If it handled the click,
         # stop further processing so the leaderboard doesn't re-select the driver.
@@ -685,14 +686,14 @@ class QualifyingReplay(arcade.Window):
                     self, x, y, button, modifiers
                 )
                 if handled:
-                    return
+                    return None
             except Exception as e:
                 print("Segment selector click error:", e)
 
         # Fallback: let the leaderboard handle the click (select drivers)
         self.leaderboard.on_mouse_press(self, x, y, button, modifiers)
 
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.SPACE:
             self.paused = not self.paused
         elif symbol == arcade.key.RIGHT:
@@ -722,10 +723,10 @@ class QualifyingReplay(arcade.Window):
             self.paused = True
 
     # New methods: start telemetry load in background
-    def load_driver_telemetry(self, driver_code: str, segment_name: str):
+    def load_driver_telemetry(self, driver_code: str, segment_name: str) -> None:
         # If already loading, ignore
         if self.loading_telemetry:
-            return
+            return None
 
         # Try to find telemetry already provided in the window's data object
         telemetry_store = (
@@ -795,7 +796,7 @@ class QualifyingReplay(arcade.Window):
             daemon=True,
         ).start()
 
-    def _bg_load_telemetry(self, driver_code: str, segment_name: str):
+    def _bg_load_telemetry(self, driver_code: str, segment_name: str) -> None:
         """Background loader that fetches telemetry if not present locally."""
         try:
             telemetry = None
@@ -870,7 +871,7 @@ class QualifyingReplay(arcade.Window):
             self.loading_telemetry = False
             self.loading_message = ""
 
-    def on_update(self, delta_time: float):
+    def on_update(self, delta_time: float) -> None:
         # time-based playback synced to telemetry timestamps
         if not self.chart_active or self.loaded_telemetry is None:
             return
@@ -899,6 +900,6 @@ class QualifyingReplay(arcade.Window):
 
 def run_qualifying_replay(
     session: Session, data: QualiTelemetry, title: str = "Qualifying Results"
-):
+) -> None:
     window = QualifyingReplay(session=session, data=data, title=title)
     arcade.run()

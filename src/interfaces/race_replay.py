@@ -131,7 +131,7 @@ class F1RaceReplayWindow(arcade.Window):
         ys_i = np.interp(t_new, t_old, ys)
         return list(zip(xs_i, ys_i))
 
-    def _project_to_reference(self, x, y):
+    def _project_to_reference(self, x: float, y: float) -> float:
         if self._ref_total_length == 0.0:
             return 0.0
 
@@ -159,7 +159,7 @@ class F1RaceReplayWindow(arcade.Window):
         # Fallback: return the cumulative distance at the closest dense sample
         return float(self._ref_cumdist[idx])
 
-    def update_scaling(self, screen_w: int, screen_h: int):
+    def update_scaling(self, screen_w: int, screen_h: int) -> None:
         """
         Recalculates the scale and translation to fit the track
         perfectly within the new screen dimensions while maintaining aspect ratio.
@@ -169,7 +169,7 @@ class F1RaceReplayWindow(arcade.Window):
         world_cx = (self.x_min + self.x_max) / 2
         world_cy = (self.y_min + self.y_max) / 2
 
-        def _rotate_about_center(x, y):
+        def _rotate_about_center(x: float, y: float) -> Tuple[float, float]:
             # Translate to centre, rotate, translate back
             tx = x - world_cx
             ty = y - world_cy
@@ -222,7 +222,7 @@ class F1RaceReplayWindow(arcade.Window):
             self.world_to_screen(x, y) for x, y in self.world_outer_points
         ]
 
-    def on_resize(self, width: int, height: int):
+    def on_resize(self, width: int, height: int) -> None:
         """Called automatically by Arcade when window is resized."""
         super().on_resize(width, height)
         self.update_scaling(width, height)
@@ -236,7 +236,7 @@ class F1RaceReplayWindow(arcade.Window):
         ):
             c.on_resize(self)
 
-    def world_to_screen(self, x, y):
+    def world_to_screen(self, x: float, y: float) -> Tuple[float, float]:
         # Rotate around the track centre (if rotation is set), then scale+translate
         world_cx = (self.x_min + self.x_max) / 2
         world_cy = (self.y_min + self.y_max) / 2
@@ -252,33 +252,7 @@ class F1RaceReplayWindow(arcade.Window):
         sy = self.world_scale * y + self.ty
         return sx, sy
 
-    def _format_wind_direction(self, degrees: float):
-        if degrees is None:
-            return "N/A"
-        deg_norm = degrees % 360
-        dirs = [
-            "N",
-            "NNE",
-            "NE",
-            "ENE",
-            "E",
-            "ESE",
-            "SE",
-            "SSE",
-            "S",
-            "SSW",
-            "SW",
-            "WSW",
-            "W",
-            "WNW",
-            "NW",
-            "NNW",
-        ]
-        step = 360 / len(dirs)
-        idx = round(deg_norm / step) % len(dirs)
-        return dirs[idx]
-
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.clear()
 
         # 1. Draw Background (stretched to fit new window size)
@@ -488,14 +462,14 @@ class F1RaceReplayWindow(arcade.Window):
         # Selected driver info component
         self.driver_info_comp.draw(self)
 
-    def on_update(self, delta_time: float):
+    def on_update(self, delta_time: float) -> None:
         if self.paused:
             return
         self.frame_index += delta_time * FPS * self.playback_speed
         if self.frame_index >= self.n_frames:
             self.frame_index = float(self.n_frames - 1)
 
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol == arcade.key.SPACE:
             self.paused = not self.paused
         elif symbol == arcade.key.RIGHT:
@@ -518,7 +492,7 @@ class F1RaceReplayWindow(arcade.Window):
             self.frame_index = 0.0
             self.playback_speed = 1.0
 
-    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         # forward to components; stop at first that handled it
         if self.leaderboard_comp.on_mouse_press(self, x, y, button, modifiers):
             return
