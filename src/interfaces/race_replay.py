@@ -10,7 +10,6 @@ from src.ui_components import (
     DriverInfoComponent,
     build_track_from_example_lap,
 )
-import math
 
 
 # Kept these as "default" starting sizes, but they are no longer hard limits
@@ -276,7 +275,7 @@ class F1RaceReplayWindow(arcade.Window):
             "NNW",
         ]
         step = 360 / len(dirs)
-        idx = math.ceil(deg_norm / step) % len(dirs)
+        idx = round(deg_norm / step) % len(dirs)
         return dirs[idx]
 
     def on_draw(self):
