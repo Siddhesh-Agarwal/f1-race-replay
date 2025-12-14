@@ -14,7 +14,7 @@ def run_arcade_replay(
     track_statuses,
     example_lap,
     drivers,
-    title,
+    title: str,
     playback_speed: float = 1.0,
     driver_colors=None,
     circuit_rotation: float = 0.0,

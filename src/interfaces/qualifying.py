@@ -1,3 +1,4 @@
+from fastf1.core import Session
 import arcade
 import threading
 import time
@@ -10,6 +11,7 @@ from src.ui_components import (
 from src.f1_data import get_driver_quali_telemetry
 from src.f1_data import FPS
 from src.lib.time import format_time
+from src.types import QualiTelemetry
 
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
@@ -26,7 +28,7 @@ BOTTOM_MARGIN = 40
 class QualifyingReplay(arcade.Window):
     def __init__(
         self,
-        session,
+        session: Session,
         data,
         circuit_rotation: float = 0,
         left_ui_margin: float = 340,
@@ -895,6 +897,8 @@ class QualifyingReplay(arcade.Window):
             )
 
 
-def run_qualifying_replay(session, data, title: str = "Qualifying Results"):
+def run_qualifying_replay(
+    session: Session, data: QualiTelemetry, title: str = "Qualifying Results"
+):
     window = QualifyingReplay(session=session, data=data, title=title)
     arcade.run()

@@ -1,3 +1,4 @@
+from typing import Optional, Tuple, Dict, Literal
 import os
 import arcade
 import numpy as np
@@ -9,6 +10,7 @@ from src.ui_components import (
     DriverInfoComponent,
     build_track_from_example_lap,
 )
+import math
 
 
 # Kept these as "default" starting sizes, but they are no longer hard limits
@@ -24,13 +26,13 @@ class F1RaceReplayWindow(arcade.Window):
         track_statuses,
         example_lap,
         drivers,
-        title,
-        playback_speed=1.0,
-        driver_colors=None,
-        circuit_rotation=0.0,
-        left_ui_margin=340,
-        right_ui_margin=260,
-        total_laps=None,
+        title: str,
+        playback_speed: float = 1.0,
+        driver_colors: Optional[Dict[str, Tuple[int, int, int]]] = None,
+        circuit_rotation: float = 0.0,
+        left_ui_margin: float = 340,
+        right_ui_margin: float = 260,
+        total_laps: Optional[int] = None,
     ):
         # Set resizable to True so the user can adjust mid-sim
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, title, resizable=True)
@@ -123,7 +125,7 @@ class F1RaceReplayWindow(arcade.Window):
         self.selected_driver = None
         self.leaderboard_rects = []  # list of tuples: (code, left, bottom, right, top)
 
-    def _interpolate_points(self, xs, ys, interp_points=2000):
+    def _interpolate_points(self, xs, ys, interp_points: int = 2000):
         t_old = np.linspace(0, 1, len(xs))
         t_new = np.linspace(0, 1, interp_points)
         xs_i = np.interp(t_new, t_old, xs)
@@ -158,7 +160,7 @@ class F1RaceReplayWindow(arcade.Window):
         # Fallback: return the cumulative distance at the closest dense sample
         return float(self._ref_cumdist[idx])
 
-    def update_scaling(self, screen_w, screen_h):
+    def update_scaling(self, screen_w: int, screen_h: int):
         """
         Recalculates the scale and translation to fit the track
         perfectly within the new screen dimensions while maintaining aspect ratio.
@@ -221,7 +223,7 @@ class F1RaceReplayWindow(arcade.Window):
             self.world_to_screen(x, y) for x, y in self.world_outer_points
         ]
 
-    def on_resize(self, width, height):
+    def on_resize(self, width: int, height: int):
         """Called automatically by Arcade when window is resized."""
         super().on_resize(width, height)
         self.update_scaling(width, height)
@@ -251,7 +253,7 @@ class F1RaceReplayWindow(arcade.Window):
         sy = self.world_scale * y + self.ty
         return sx, sy
 
-    def _format_wind_direction(self, degrees):
+    def _format_wind_direction(self, degrees: float):
         if degrees is None:
             return "N/A"
         deg_norm = degrees % 360
@@ -273,7 +275,8 @@ class F1RaceReplayWindow(arcade.Window):
             "NW",
             "NNW",
         ]
-        idx = int((deg_norm / 22.5) + 0.5) % len(dirs)
+        step = 360 / len(dirs)
+        idx = math.ceil(deg_norm / step) % len(dirs)
         return dirs[idx]
 
     def on_draw(self):
@@ -302,14 +305,14 @@ class F1RaceReplayWindow(arcade.Window):
                 break
 
         # Map track status -> colour (R,G,B)
-        STATUS_COLORS = {
+        STATUS_COLORS: Dict[str, Tuple[int, int, int]] = {
             "GREEN": (150, 150, 150),  # normal grey
             "YELLOW": (220, 180, 0),  # caution
             "RED": (200, 30, 30),  # red-flag
             "VSC": (200, 130, 50),  # virtual safety car / amber-brown
             "SC": (180, 100, 30),  # safety car (darker brown)
         }
-        track_color = STATUS_COLORS.get("GREEN", (150, 150, 150))
+        track_color = STATUS_COLORS.get("GREEN")
 
         if current_track_status == "2":
             track_color = STATUS_COLORS.get("YELLOW")
@@ -320,10 +323,14 @@ class F1RaceReplayWindow(arcade.Window):
         elif current_track_status == "6" or current_track_status == "7":
             track_color = STATUS_COLORS.get("VSC")
 
+        if track_color is None:
+            track_color = (150, 150, 150)
+
+        draw_line_track_color = (track_color[0], track_color[1], track_color[2], 255)
         if len(self.screen_inner_points) > 1:
-            arcade.draw_line_strip(self.screen_inner_points, track_color, 4)
+            arcade.draw_line_strip(self.screen_inner_points, draw_line_track_color, 4)
         if len(self.screen_outer_points) > 1:
-            arcade.draw_line_strip(self.screen_outer_points, track_color, 4)
+            arcade.draw_line_strip(self.screen_outer_points, draw_line_track_color, 4)
 
         # 3. Draw Cars
         frame = self.frames[idx]

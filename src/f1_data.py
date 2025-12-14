@@ -2,6 +2,7 @@ import os
 import sys
 import fastf1
 import fastf1.plotting
+from fastf1.core import Session
 from multiprocessing import Pool, cpu_count
 import numpy as np
 import json
@@ -10,12 +11,12 @@ from datetime import timedelta
 
 from src.lib.tyres import get_tyre_compound_int
 from src.lib.time import parse_time_string, format_time
-from src.types import SessionType
-from typing import Optional
+from src.types import SessionType, QualiTelemetry, QualiTelemetryResult
+from typing import Optional, Dict, List, Tuple
 import pandas as pd
 
 
-def enable_cache():
+def enable_cache() -> None:
     # Check if cache folder exists
     if not os.path.exists(".fastf1-cache"):
         os.makedirs(".fastf1-cache")
@@ -166,7 +167,7 @@ def _process_single_driver(args):
     }
 
 
-def load_session(year, round_number, session_type: SessionType):
+def load_session(year: int, round_number: int, session_type: SessionType) -> Session:
     # session_type: 'R' (Race), 'S' (Sprint) etc.
     session = fastf1.get_session(year, round_number, session_type.value)
     session.load(telemetry=True, weather=True)
@@ -176,7 +177,7 @@ def load_session(year, round_number, session_type: SessionType):
 # The following functions require a loaded session object
 
 
-def get_driver_colors(session):
+def get_driver_colors(session: Session) -> Dict[str, Tuple[int, int, int]]:
     color_mapping = fastf1.plotting.get_driver_color_mapping(session)
 
     # Convert hex colors to RGB tuples
@@ -188,14 +189,16 @@ def get_driver_colors(session):
     return rgb_colors
 
 
-def get_circuit_rotation(session):
+def get_circuit_rotation(session: Session):
     circuit = session.get_circuit_info()
+    if circuit is None:
+        raise ValueError("Circuit information not found")
     return circuit.rotation
 
 
-def get_race_telemetry(session, session_type="R"):
+def get_race_telemetry(session: Session, session_type: SessionType):
     event_name = str(session).replace(" ", "_")
-    cache_suffix = "sprint" if session_type == "S" else "race"
+    cache_suffix = "sprint" if session_type == SessionType.SPRINT else "race"
 
     # Check if this data has already been computed
 
@@ -503,40 +506,40 @@ def get_race_telemetry(session, session_type="R"):
     }
 
 
-def get_qualifying_results(session):
+def get_qualifying_results(session: Session) -> List[QualiTelemetryResult]:
     # Extract the qualifying results and return a list of the drivers, their positions and their lap times in each qualifying segment
 
     results = session.results
 
-    qualifying_data = []
+    qualifying_data: List[QualiTelemetryResult] = []
 
     for _, row in results.iterrows():
-        driver_code = row["Abbreviation"]
+        driver_code = str(row["Abbreviation"])
         position = int(row["Position"])
         q1_time = row["Q1"]
         q2_time = row["Q2"]
         q3_time = row["Q3"]
 
         # Convert pandas Timedelta objects to seconds (or None if NaT)
-        def convert_time_to_seconds(time_val) -> Optional[str]:
+        def convert_time_to_seconds(time_val: pd.Timedelta) -> Optional[str]:
             if pd.isna(time_val):
                 return None
             return str(time_val.total_seconds())
 
         qualifying_data.append(
-            {
-                "code": driver_code,
-                "position": position,
-                "color": get_driver_colors(session).get(driver_code, (128, 128, 128)),
-                "Q1": convert_time_to_seconds(q1_time),
-                "Q2": convert_time_to_seconds(q2_time),
-                "Q3": convert_time_to_seconds(q3_time),
-            }
+            QualiTelemetryResult(
+                code=driver_code,
+                position=position,
+                color=get_driver_colors(session).get(driver_code, (128, 128, 128)),
+                Q1=convert_time_to_seconds(q1_time),
+                Q2=convert_time_to_seconds(q2_time),
+                Q3=convert_time_to_seconds(q3_time),
+            )
         )
     return qualifying_data
 
 
-def get_driver_quali_telemetry(session, driver_code: str, quali_segment: str):
+def get_driver_quali_telemetry(session: Session, driver_code: str, quali_segment: str):
     # Split Q1/Q2/Q3 sections
     q1, q2, q3 = session.laps.split_qualifying_sessions()
 
@@ -825,7 +828,9 @@ def _process_quali_driver(args):
     }
 
 
-def get_quali_telemetry(session, session_type="Q"):
+def get_quali_telemetry(
+    session: Session, session_type: SessionType = SessionType.QUALIFYING
+) -> QualiTelemetry:
     # This function is going to get the results from qualifying and the telemetry for each drivers' fastest laps in each qualifying segment
 
     # The structure of the returned data will be:
@@ -842,7 +847,9 @@ def get_quali_telemetry(session, session_type="Q"):
     # }
 
     event_name = str(session).replace(" ", "_")
-    cache_suffix = "sprintquali" if session_type == "SQ" else "quali"
+    cache_suffix = (
+        "sprintquali" if session_type == SessionType.SPRINT_QUALIFYING else "quali"
+    )
 
     # Check if this data has already been computed
     try:
@@ -861,8 +868,8 @@ def get_quali_telemetry(session, session_type="Q"):
 
     telemetry_data = {}
 
-    max_speed = 0.0
-    min_speed = 0.0
+    max_speed: float = 0.0
+    min_speed: float = 0.0
 
     driver_codes = {
         num: session.get_driver(num)["Abbreviation"] for num in session.drivers
@@ -882,10 +889,9 @@ def get_quali_telemetry(session, session_type="Q"):
         driver_code = result["driver_code"]
         telemetry_data[driver_code] = result["driver_telemetry_data"]
 
-        if result["max_speed"] > max_speed:
-            max_speed = result["max_speed"]
+        max_speed = max(max_speed, float(result["max_speed"]))
         if result["min_speed"] < min_speed or min_speed == 0.0:
-            min_speed = result["min_speed"]
+            min_speed = float(result["min_speed"])
 
     # Save to the compute_data directory
 

@@ -10,11 +10,11 @@ tyre_compounds_ints: Dict[TyreType, int] = {
 }
 
 
-def get_tyre_compound_int(compound_str: TyreType):
-    return int(tyre_compounds_ints.get(compound_str, -1))
+def get_tyre_compound_int(compound_str: TyreType) -> int:
+    return tyre_compounds_ints.get(compound_str, -1)
 
 
-def get_tyre_compound_str(compound_int: int) -> TyreType | Literal["UNKNOWN"]:
+def get_tyre_compound_str(compound_int: int) -> Union[TyreType, Literal["UNKNOWN"]]:
     for k, v in tyre_compounds_ints.items():
         if v == compound_int:
             return k

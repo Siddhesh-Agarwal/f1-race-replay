@@ -32,14 +32,16 @@ Recently added support for Qualifying session replays with telemetry visualizati
 - [Arcade](https://api.arcade.academy/en/latest/)
 - numpy
 
-Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+Install [uv](https://docs.astral.sh/uv/) to run the application.
 
 FastF1 cache folder will be created automatically on first run. If it is not created, you can manually create a folder named `.fastf1-cache` in the project root.
 
 ## Usage
+
+For help:
+```bash
+uv run main.py --help
+```
 
 Run the main script and specify the year and round:
 ```bash

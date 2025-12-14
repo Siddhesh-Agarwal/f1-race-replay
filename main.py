@@ -50,6 +50,8 @@ def main(
         session_type = SessionType.SPRINT
     elif qualifying:
         session_type = SessionType.QUALIFYING
+    else:
+        session_type = SessionType.RACE
 
     typer.echo(f"Loading F1 {year} Round {round_number} Session '{session_type.value}'")
 
@@ -64,7 +66,7 @@ def main(
 
     if session_type in (SessionType.QUALIFYING, SessionType.SPRINT_QUALIFYING):
         qualifying_session_data = get_quali_telemetry(
-            session, session_type=session_type.value
+            session, session_type=session_type
         )
 
         title = (
@@ -78,8 +80,11 @@ def main(
             title=title,
         )
     else:
-        race_telemetry = get_race_telemetry(session, session_type=session_type.value)
-        example_lap = session.laps.pick_fastest().get_telemetry()
+        race_telemetry = get_race_telemetry(session, session_type=session_type)
+        fastest_lap = session.laps.pick_fastest()
+        if fastest_lap is None:
+            raise ValueError("No fastest lap found")
+        example_lap = fastest_lap.get_telemetry()
         drivers = session.drivers
         circuit_rotation = get_circuit_rotation(session)
 
