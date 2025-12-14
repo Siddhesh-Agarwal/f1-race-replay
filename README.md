@@ -43,29 +43,29 @@ FastF1 cache folder will be created automatically on first run. If it is not cre
 
 Run the main script and specify the year and round:
 ```bash
-python main.py --year 2025 --round 12
+uv run main.py --year 2025 --round 12
 ```
 
 To run a Sprint session (if the event has one), add `--sprint`:
 ```bash
-python main.py --year 2025 --round 12 --sprint
+uv run main.py --year 2025 --round 12 --sprint
 ```
 
 The application will load a pre-computed telemetry dataset if you have run it before for the same event. To force re-computation of telemetry data, use the `--refresh-data` flag:
 ```bash
-python main.py --year 2025 --round 12 --refresh-data
+uv run main.py --year 2025 --round 12 --refresh-data
 ```
 
 ### Qualifying Session Replay
 
 To run a Qualifying session replay, use the `--qualifying` flag:
 ```bash
-python main.py --year 2025 --round 12 --qualifying
+uv run main.py --year 2025 --round 12 --qualifying
 ```
 
 To run a Sprint Qualifying session (if the event has one), add `--sprint`:
 ```bash
-python main.py --year 2025 --round 12 --qualifying --sprint
+uv run main.py --year 2025 --round 12 --qualifying --sprint
 ```
 
 ## File Structure
@@ -85,9 +85,12 @@ f1-race-replay/
 │   ├── interfaces/
 │   │   └── qualifying.py     # Qualifying session interface and telemetry visualization
 │   │   └── race_replay.py    # Race replay interface and telemetry visualization
-│   └── lib/
-│       └── tyres.py          # Type definitions for telemetry data structures
-│       └── time.py           # Time formatting utilities
+│   ├── lib/
+│   │   └── tyres.py          # Type definitions for telemetry data structures
+│   │   └── time.py           # Time formatting utilities
+│   └── types/
+│       └── __init__.py       # Type definitions imports
+│       └── main.py           # Type definitions for main.py
 └── .fastf1-cache/            # FastF1 cache folder (created automatically upon first run)
 └── computed_data/            # Computed telemetry data (created automatically upon first run)
 ```
