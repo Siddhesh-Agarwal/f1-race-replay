@@ -1,5 +1,4 @@
 from typing import Optional
-import os
 import arcade
 from src.interfaces.race_replay import F1RaceReplayWindow
 from src.types import DriverColor
@@ -22,7 +21,7 @@ def run_arcade_replay(
     total_laps: Optional[int] = None,
     chart: bool = False,
 ):
-    window = F1RaceReplayWindow(
+    F1RaceReplayWindow(
         frames=frames,
         track_statuses=track_statuses,
         example_lap=example_lap,

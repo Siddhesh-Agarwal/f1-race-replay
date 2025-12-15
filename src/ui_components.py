@@ -1,7 +1,6 @@
 from fastf1.core import Telemetry
 import arcade
-from typing import List, Tuple, Optional
-from typing import Sequence, Optional, Tuple
+from typing import List, Optional, Tuple
 from src.lib.time import format_time
 import numpy as np
 import os
@@ -327,7 +326,6 @@ class QualifyingSegmentSelectorComponent(BaseComponent):
         left = center_x - self.width // 2
         right = center_x + self.width // 2
         top = center_y + self.height // 2
-        bottom = center_y - self.height // 2
 
         if driver_result is None:
             raise ValueError(f"Driver with code '{code}' not found in results.")
@@ -366,7 +364,6 @@ class QualifyingSegmentSelectorComponent(BaseComponent):
         for i, data in enumerate(segments):
             segment = f"Q{data['segment']}"
             segment_top = start_y - (i * (segment_height + 10))
-            segment_bottom = segment_top - segment_height
 
             # Highlight if selected
             segment_rect = arcade.XYWH(
@@ -435,7 +432,6 @@ class QualifyingSegmentSelectorComponent(BaseComponent):
         left = center_x - self.width // 2
         right = center_x + self.width // 2
         top = center_y + self.height // 2
-        bottom = center_y - self.height // 2
 
         # Check close button (match the rect from draw method)
         close_btn_left = right - 30 - 10  # center - half width

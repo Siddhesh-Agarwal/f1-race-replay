@@ -5,12 +5,11 @@ import fastf1.plotting
 from fastf1.core import Session
 from multiprocessing import Pool, cpu_count
 import numpy as np
-import json
 import pickle
 from datetime import timedelta
 
 from src.lib.tyres import get_tyre_compound_int
-from src.lib.time import parse_time_string, format_time
+from src.lib.time import parse_time_string
 from src.types import (
     DriverColor,
     RaceTelemetry,

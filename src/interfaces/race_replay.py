@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Dict, Literal
+from typing import Dict, Optional, Tuple
 import os
 import arcade
 import numpy as np

@@ -1,4 +1,3 @@
-from f1_data import get_driver_colors
 from enum import Enum
 from typing import Literal, Dict, Any, List, TypedDict, Tuple, Optional
 

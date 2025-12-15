@@ -245,7 +245,7 @@ class QualifyingReplay(arcade.Window):
                 area_right = self.width - RIGHT_MARGIN
                 area_top = self.height - TOP_MARGIN
                 area_bottom = BOTTOM_MARGIN
-                area_w = max(10, area_right - area_left)
+
                 area_h = max(10, area_top - area_bottom)
 
                 # Split vertically: top half = chart, bottom half = circuit map
@@ -901,5 +901,5 @@ class QualifyingReplay(arcade.Window):
 def run_qualifying_replay(
     session: Session, data: QualiTelemetry, title: str = "Qualifying Results"
 ) -> None:
-    window = QualifyingReplay(session=session, data=data, title=title)
+    QualifyingReplay(session=session, data=data, title=title)
     arcade.run()
